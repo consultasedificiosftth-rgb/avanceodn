@@ -43,6 +43,9 @@ export default async function DashboardLayout({
               <Link href="/dashboard/pds/nueva" className="transition-colors hover:text-foreground">
                 Nueva PD
               </Link>
+              <Link href="/dashboard/links" className="transition-colors hover:text-foreground">
+                Links de proveedores
+              </Link>
               {admin.profile.role === "superadmin" && (
                 <Link href="/dashboard/admins" className="transition-colors hover:text-foreground">
                   Administrativos

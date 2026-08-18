@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolvePdByToken } from "@/lib/api/publicAuth";
+import { resolveProviderByToken, resolvePdForProvider } from "@/lib/api/publicAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { uploadNapPhoto, deleteNapPhoto, signPhotoUrls } from "@/lib/storage";
 import type { PhotoCategory } from "@/lib/types";
@@ -17,10 +17,15 @@ async function loadActiveNap(supabase: ReturnType<typeof createAdminClient>, pdI
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string; napId: string }> }
+  { params }: { params: Promise<{ providerToken: string; pdId: string; napId: string }> }
 ) {
-  const { token, napId } = await params;
-  const pd = await resolvePdByToken(token);
+  const { providerToken, pdId, napId } = await params;
+  const provider = await resolveProviderByToken(providerToken);
+  if (!provider) {
+    return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
+  }
+
+  const pd = await resolvePdForProvider(provider.id, pdId);
   if (!pd) {
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }
@@ -72,10 +77,15 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string; napId: string }> }
+  { params }: { params: Promise<{ providerToken: string; pdId: string; napId: string }> }
 ) {
-  const { token, napId } = await params;
-  const pd = await resolvePdByToken(token);
+  const { providerToken, pdId, napId } = await params;
+  const provider = await resolveProviderByToken(providerToken);
+  if (!provider) {
+    return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
+  }
+
+  const pd = await resolvePdForProvider(provider.id, pdId);
   if (!pd) {
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }

@@ -20,7 +20,8 @@ type Region = { id: string; name: string };
 type Provider = { id: string; name: string };
 
 type UploadResult = {
-  pd: { id: string; code: string; link_token: string };
+  pd: { id: string; code: string; provider_id: string | null };
+  provider: { id: string; name: string; link_token: string } | null;
   created: boolean;
   addedCodes: string[];
   missingCodes: string[];
@@ -95,14 +96,14 @@ export function NewPdForm({
     }
   }
 
-  function link(token: string) {
+  function providerLink(token: string) {
     if (typeof window === "undefined") return "";
     return `${window.location.origin}/p/${token}`;
   }
 
   async function copyLink() {
-    if (!result) return;
-    await navigator.clipboard.writeText(link(result.pd.link_token));
+    if (!result?.provider) return;
+    await navigator.clipboard.writeText(providerLink(result.provider.link_token));
     setCopied(true);
     toast.success("Link copiado");
     setTimeout(() => setCopied(false), 2000);
@@ -129,18 +130,30 @@ export function NewPdForm({
           </AlertDescription>
         </Alert>
 
-        <div className="space-y-2">
-          <Label>Link para el proveedor</Label>
-          <div className="flex gap-2">
-            <Input readOnly value={link(result.pd.link_token)} className="font-mono text-sm" />
-            <Button type="button" variant="outline" onClick={copyLink}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
+        {result.provider && (
+          <div className="space-y-2">
+            <Label>
+              Esta PD ya está disponible en el link de <span className="font-medium">{result.provider.name}</span>
+            </Label>
+            <div className="flex gap-2">
+              <Input readOnly value={providerLink(result.provider.link_token)} className="font-mono text-sm" />
+              <Button type="button" variant="outline" onClick={copyLink}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={() => router.push(`/dashboard/pds/${result.pd.id}`)}>Ver PD</Button>
+          {result.provider && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/links?provider=${result.provider!.id}`)}
+            >
+              Ver en Links de proveedores
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setResult(null)}>
             Cargar otra
           </Button>

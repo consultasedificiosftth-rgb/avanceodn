@@ -61,8 +61,15 @@ export async function POST(request: NextRequest) {
       originalFilename: file.name,
     });
 
+    const { data: provider } = await supabase
+      .from("providers")
+      .select("id, name, link_token")
+      .eq("id", result.pd.provider_id)
+      .maybeSingle();
+
     return NextResponse.json({
       pd: result.pd,
+      provider,
       created: result.created,
       addedCodes: result.addedCodes,
       missingCodes: result.missingCodes,

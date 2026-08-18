@@ -1,15 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolvePdByToken } from "@/lib/api/publicAuth";
+import { resolveProviderByToken, resolvePdForProvider } from "@/lib/api/publicAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signPhotoUrls } from "@/lib/storage";
 import { pctOdn } from "@/lib/types";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ providerToken: string; pdId: string }> }
 ) {
-  const { token } = await params;
-  const pd = await resolvePdByToken(token);
+  const { providerToken, pdId } = await params;
+  const provider = await resolveProviderByToken(providerToken);
+  if (!provider) {
+    return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
+  }
+
+  const pd = await resolvePdForProvider(provider.id, pdId);
   if (!pd) {
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }

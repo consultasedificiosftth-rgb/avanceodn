@@ -19,6 +19,7 @@ export type Provider = {
   id: string;
   name: string;
   active: boolean;
+  link_token: string;
   created_at: string;
 };
 

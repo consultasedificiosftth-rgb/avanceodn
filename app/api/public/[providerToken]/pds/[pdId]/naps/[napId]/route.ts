@@ -1,15 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolvePdByToken } from "@/lib/api/publicAuth";
+import { resolveProviderByToken, resolvePdForProvider } from "@/lib/api/publicAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type ToggleField = "construido" | "pruebas_opticas";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string; napId: string }> }
+  { params }: { params: Promise<{ providerToken: string; pdId: string; napId: string }> }
 ) {
-  const { token, napId } = await params;
-  const pd = await resolvePdByToken(token);
+  const { providerToken, pdId, napId } = await params;
+  const provider = await resolveProviderByToken(providerToken);
+  if (!provider) {
+    return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
+  }
+
+  const pd = await resolvePdForProvider(provider.id, pdId);
   if (!pd) {
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }

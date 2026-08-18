@@ -14,11 +14,13 @@ import { toast } from "sonner";
 export type NapWithPhotos = Nap & { nap_photos: (NapPhoto & { url: string | null })[] };
 
 export function NapCard({
-  token,
+  providerToken,
+  pdId,
   nap,
   onChange,
 }: {
-  token: string;
+  providerToken: string;
+  pdId: string;
   nap: NapWithPhotos;
   onChange: (updated: NapWithPhotos) => void;
 }) {
@@ -34,7 +36,7 @@ export function NapCard({
   async function patchField(field: "construido" | "pruebas_opticas", value: boolean) {
     setBusy(true);
     try {
-      const res = await fetch(`/api/public/${token}/naps/${nap.id}`, {
+      const res = await fetch(`/api/public/${providerToken}/pds/${pdId}/naps/${nap.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ field, value }),
@@ -62,7 +64,7 @@ export function NapCard({
         formData.append("file", file);
         formData.append("category", category);
 
-        const res = await fetch(`/api/public/${token}/naps/${nap.id}/photos`, {
+        const res = await fetch(`/api/public/${providerToken}/pds/${pdId}/naps/${nap.id}/photos`, {
           method: "POST",
           body: formData,
         });
@@ -92,9 +94,10 @@ export function NapCard({
   async function deletePhoto(photoId: string) {
     setBusy(true);
     try {
-      const res = await fetch(`/api/public/${token}/naps/${nap.id}/photos?photoId=${photoId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/public/${providerToken}/pds/${pdId}/naps/${nap.id}/photos?photoId=${photoId}`,
+        { method: "DELETE" }
+      );
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error ?? "Error borrando la foto.");
