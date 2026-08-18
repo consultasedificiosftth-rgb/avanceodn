@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,6 +15,11 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+const displayCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "Portal de seguimiento ODN",
@@ -26,9 +32,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="font-sans">
+    <html lang="es">
       <body
-        className={cn(geistSans.variable, geistMono.variable, "antialiased")}
+        className={cn(
+          geistSans.variable,
+          geistMono.variable,
+          displayCondensed.variable,
+          "font-sans antialiased"
+        )}
       >
         {children}
         <Toaster />

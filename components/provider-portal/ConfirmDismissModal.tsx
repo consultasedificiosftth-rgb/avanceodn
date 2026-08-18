@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,25 +28,27 @@ export function ConfirmDismissModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
+          <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-pending/15 text-pending">
+            <AlertTriangle className="size-5" />
+          </div>
           <DialogTitle>¿Destildar {label}?</DialogTitle>
           <DialogDescription>
-            Se perderá el estado de avance de este ítem.
+            Se va a perder el estado de avance de este ítem.
             {keepsPhotos ? " Las fotos ya subidas no se van a borrar." : ""}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
+        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
           <Button
-            variant="destructive"
+            variant="ghost"
+            className="text-danger hover:bg-danger/10 hover:text-danger"
             onClick={() => {
               onConfirm();
               onOpenChange(false);
             }}
           >
-            Destildar
+            Sí, destildar
           </Button>
+          <Button onClick={() => onOpenChange(false)}>Cancelar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

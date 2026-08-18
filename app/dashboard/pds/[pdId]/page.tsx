@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentAdmin } from "@/lib/auth";
 import { signPhotoUrls } from "@/lib/storage";
 import { pctOdn, type Nap, type NapPhoto, type PdDailySnapshot } from "@/lib/types";
+import { ProgressRing } from "@/components/ui/progress-ring";
 import { PdTimeline } from "@/components/dashboard/PdTimeline";
 import { NapList, type NapListItem } from "@/components/dashboard/NapList";
 import { PendingReviewBanner } from "@/components/dashboard/PendingReviewBanner";
@@ -79,21 +80,27 @@ export default async function PdDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">PD {pd.code}</h1>
-          <p className="text-sm text-muted-foreground">
-            {regionName} · Proveedor: {providerName}
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-line bg-card p-5">
+        <div className="flex items-center gap-4">
+          <ProgressRing value={pctOdn(construidos, total)} size={88} />
+          <div>
+            <h1 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {pd.code}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {regionName} · Proveedor: {providerName}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-0.5 font-mono text-sm text-muted-foreground">
+              <span>
+                <span className="text-foreground">{construidos}</span>/{total} construidos
+              </span>
+              <span>
+                <span className="text-foreground">{pruebasOpticas}</span>/{total} pruebas ópticas
+              </span>
+            </div>
+          </div>
         </div>
         <ExportButtons scope="pd" pdId={pd.id} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="% ODN" value={`${pctOdn(construidos, total)}%`} />
-        <StatCard label="Total NAPs" value={String(total)} />
-        <StatCard label="Construidos" value={`${construidos}/${total}`} />
-        <StatCard label="Pruebas ópticas" value={`${pruebasOpticas}/${total}`} />
       </div>
 
       {pendingUpload && (
@@ -104,32 +111,23 @@ export default async function PdDetailPage({
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-background p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-card p-4">
         <div>
-          <p className="text-sm font-medium">Re-cargar Excel</p>
+          <p className="text-sm font-medium text-foreground">Re-cargar Excel</p>
           <p className="text-xs text-muted-foreground">Actualiza los NAPs de esta PD desde un nuevo archivo.</p>
         </div>
         <ReuploadForm pdId={pd.id} />
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">Línea de tiempo</h2>
+        <h2 className="text-lg font-medium text-foreground">Línea de tiempo</h2>
         <PdTimeline snapshots={(snapshots ?? []) as PdDailySnapshot[]} />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">NAPs ({total})</h2>
+        <h2 className="text-lg font-medium text-foreground">NAPs ({total})</h2>
         <NapList naps={napListItems} canRemove={admin?.profile.role === "superadmin"} />
       </section>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border bg-background p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
 }

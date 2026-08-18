@@ -1,3 +1,26 @@
+# Portal de seguimiento ODN
+
+Ver `02_brief_desarrollo_claude_code.md` para el detalle funcional completo.
+
+## Setup de Supabase
+
+Correr en el SQL Editor de Supabase, en este orden:
+
+1. `01_schema_supabase.sql` — esquema completo (tablas, triggers, RLS).
+2. `03_migration_force_password_change.sql` — agrega el flag de cambio de
+   contraseña obligatorio en primer login.
+
+Crear también el bucket privado `nap-photos` desde Storage > New bucket.
+
+Después, seguir `04_bootstrap_primer_superadmin.md` para dar de alta al
+primer superadmin (ese alta se hace a mano desde el dashboard de Supabase,
+no desde la app).
+
+Completar `.env.local` con las credenciales del proyecto (ver
+`.env.local.example`).
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

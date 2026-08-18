@@ -111,16 +111,17 @@ export function NewPdForm({
   if (result) {
     return (
       <div className="space-y-4">
-        <Alert>
+        <Alert className="border-line">
           <AlertTitle>
-            {result.created ? `PD ${result.pd.code} creada` : `PD ${result.pd.code} actualizada`}
+            PD <span className="font-mono">{result.pd.code}</span>{" "}
+            {result.created ? "creada" : "actualizada"}
           </AlertTitle>
           <AlertDescription>
             {result.created
               ? `Se cargaron ${result.addedCodes.length} NAPs.`
               : `Se agregaron ${result.addedCodes.length} NAPs nuevos.`}
             {result.status === "pending_review" && (
-              <p className="mt-1 text-amber-600">
+              <p className="mt-1 text-pending">
                 Hay {result.missingCodes.length} NAPs que ya no aparecen en el archivo. Revisalos
                 en el detalle de la PD.
               </p>
@@ -131,7 +132,7 @@ export function NewPdForm({
         <div className="space-y-2">
           <Label>Link para el proveedor</Label>
           <div className="flex gap-2">
-            <Input readOnly value={link(result.pd.link_token)} />
+            <Input readOnly value={link(result.pd.link_token)} className="font-mono text-sm" />
             <Button type="button" variant="outline" onClick={copyLink}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>

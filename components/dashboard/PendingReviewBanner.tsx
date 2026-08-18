@@ -50,7 +50,7 @@ export function PendingReviewBanner({
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Hay {missingCodes.length} NAPs que faltan en la última carga</AlertTitle>
       <AlertDescription>
-        <p className="mb-2 break-words">{missingCodes.join(", ")}</p>
+        <p className="mb-2 break-words font-mono text-xs">{missingCodes.join(", ")}</p>
         <div className="flex gap-2">
           <Button
             size="sm"

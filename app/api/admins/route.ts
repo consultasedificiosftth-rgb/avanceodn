@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireSuperadmin } from "@/lib/api/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateTempPassword } from "@/lib/passwords";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireSuperadmin();
@@ -8,23 +9,23 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const email = String(body.email ?? "").trim();
-  const password = String(body.password ?? "");
   const fullName = body.fullName ? String(body.fullName).trim() : null;
   const role = body.role === "superadmin" ? "superadmin" : "admin";
   const regionId = role === "superadmin" ? null : (body.regionId ? String(body.regionId) : null);
 
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email y contraseña son obligatorios." }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: "El email es obligatorio." }, { status: 400 });
   }
   if (role === "admin" && !regionId) {
     return NextResponse.json({ error: "Un admin regional necesita una región." }, { status: 400 });
   }
 
   const supabase = createAdminClient();
+  const tempPassword = generateTempPassword();
 
   const { data: created, error: createError } = await supabase.auth.admin.createUser({
     email,
-    password,
+    password: tempPassword,
     email_confirm: true,
   });
 
@@ -34,7 +35,13 @@ export async function POST(request: NextRequest) {
 
   const { data: profile, error: profileError } = await supabase
     .from("admin_profiles")
-    .insert({ id: created.user.id, full_name: fullName, role, region_id: regionId })
+    .insert({
+      id: created.user.id,
+      full_name: fullName,
+      role,
+      region_id: regionId,
+      force_password_change: true,
+    })
     .select("*")
     .single();
 
@@ -46,5 +53,5 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.json({ profile });
+  return NextResponse.json({ profile, email, tempPassword });
 }

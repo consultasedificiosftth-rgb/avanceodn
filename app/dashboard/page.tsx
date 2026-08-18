@@ -83,7 +83,7 @@ export default async function DashboardPage({
 
       <PdFilters providers={providers ?? []} />
 
-      <div className="rounded-md border bg-background">
+      <div className="rounded-lg border border-line bg-card">
         <PdTable rows={rows} />
       </div>
     </div>

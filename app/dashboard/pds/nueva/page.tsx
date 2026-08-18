@@ -16,8 +16,8 @@ export default async function NuevaPdPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-semibold">Nueva PD</h1>
-      <Card>
+      <h1 className="text-2xl font-semibold text-foreground">Nueva PD</h1>
+      <Card className="border-line bg-card">
         <CardHeader>
           <CardTitle className="text-base">Subir Excel</CardTitle>
         </CardHeader>

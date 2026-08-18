@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, TriangleAlert } from "lucide-react";
 import { NapCard, type NapWithPhotos } from "@/components/provider-portal/NapCard";
+import { ProgressRing } from "@/components/ui/progress-ring";
 import { pctOdn } from "@/lib/types";
 
 type Stats = {
@@ -47,48 +48,63 @@ export function ProviderPortal({ token }: { token: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <p className="text-center text-muted-foreground">{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="flex max-w-xs flex-col items-center gap-3 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-danger/15 text-danger">
+            <TriangleAlert className="size-6" />
+          </div>
+          <p className="text-foreground">{error}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 pb-10">
-      <header className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-lg font-semibold">PD {pdCode}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{stats.pctOdn}% ODN</span>
-            <span>
-              {stats.construidos} construidos de {stats.total}
-            </span>
-            <span>
-              {stats.pruebasOpticas} con pruebas ópticas de {stats.total}
-            </span>
+    <div className="min-h-screen bg-background pb-10">
+      <header className="sticky top-0 z-10 border-b border-line bg-background/95 px-4 py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center gap-4">
+          <ProgressRing value={stats.pctOdn} size={72} />
+          <div className="min-w-0">
+            <h1 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {pdCode}
+            </h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-sm text-muted-foreground">
+              <span>
+                <span className="text-foreground">{stats.construidos}</span>/{stats.total} construidos
+              </span>
+              <span>
+                <span className="text-foreground">{stats.pruebasOpticas}</span>/{stats.total} pruebas ópticas
+              </span>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="mx-auto mt-4 max-w-3xl space-y-3 px-4">
-        {naps.map((nap) => (
-          <NapCard
-            key={nap.id}
-            token={token}
-            nap={nap}
-            onChange={(updated) =>
-              setNaps((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
-            }
-          />
-        ))}
+        {naps.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Todavía no hay NAPs cargados en esta PD.
+          </p>
+        ) : (
+          naps.map((nap) => (
+            <NapCard
+              key={nap.id}
+              token={token}
+              nap={nap}
+              onChange={(updated) =>
+                setNaps((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
+              }
+            />
+          ))
+        )}
       </main>
     </div>
   );

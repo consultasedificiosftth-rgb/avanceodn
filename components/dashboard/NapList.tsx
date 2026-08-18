@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -50,20 +51,34 @@ export function NapList({ naps, canRemove }: { naps: NapListItem[]; canRemove: b
   }
 
   if (naps.length === 0) {
-    return <p className="text-sm text-muted-foreground">Esta PD no tiene NAPs activos.</p>;
+    return (
+      <p className="rounded-lg border border-dashed border-line bg-card p-6 text-center text-sm text-muted-foreground">
+        Esta PD no tiene NAPs activos.
+      </p>
+    );
   }
 
   return (
     <div className="space-y-3">
       {naps.map((nap) => (
-        <Card key={nap.id}>
+        <Card key={nap.id} className="border-line bg-card">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
-            <CardTitle className="text-base">{nap.code}</CardTitle>
+            <span className="font-mono text-lg font-semibold text-foreground">{nap.code}</span>
             <div className="flex items-center gap-2">
-              <Badge variant={nap.construido ? "default" : "secondary"}>
+              <Badge
+                className={cn(
+                  !nap.construido && "bg-secondary text-secondary-foreground",
+                  nap.construido && "border-transparent bg-signal/15 text-signal"
+                )}
+              >
                 {nap.construido ? "Construido" : "Sin construir"}
               </Badge>
-              <Badge variant={nap.pruebas_opticas ? "default" : "secondary"}>
+              <Badge
+                className={cn(
+                  !nap.pruebas_opticas && "bg-secondary text-secondary-foreground",
+                  nap.pruebas_opticas && "border-transparent bg-signal/15 text-signal"
+                )}
+              >
                 {nap.pruebas_opticas ? "Con pruebas ópticas" : "Sin pruebas ópticas"}
               </Badge>
             </div>
@@ -85,7 +100,7 @@ export function NapList({ naps, canRemove }: { naps: NapListItem[]; canRemove: b
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive"
+                  className="text-danger hover:bg-danger/10 hover:text-danger"
                   onClick={() => setToRemove(nap)}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" /> Eliminar NAP

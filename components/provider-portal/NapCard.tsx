@@ -1,13 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Loader2, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Camera, Plus } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PhotoCarousel } from "@/components/provider-portal/PhotoCarousel";
 import { ConfirmDismissModal } from "@/components/provider-portal/ConfirmDismissModal";
+import { NapToggle } from "@/components/provider-portal/NapToggle";
 import { compressImage } from "@/lib/image/compress";
 import { PHOTO_LIMITS, type Nap, type NapPhoto } from "@/lib/types";
 import { toast } from "sonner";
@@ -130,23 +129,23 @@ export function NapCard({
   const pruebasRemaining = PHOTO_LIMITS.pr_optica - pruebasPhotos.length;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{nap.code}</CardTitle>
+    <Card className="gap-4 border-line bg-card py-4">
+      <CardHeader className="px-4">
+        <span className="font-mono text-xl font-semibold tracking-tight text-foreground">
+          {nap.code}
+        </span>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id={`construido-${nap.id}`}
-                checked={nap.construido}
-                disabled={busy}
-                onCheckedChange={(v) => handleConstruidoToggle(Boolean(v))}
-              />
-              <Label htmlFor={`construido-${nap.id}`}>Construido</Label>
-              {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-            </div>
+      <CardContent className="space-y-5 px-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-2.5">
+            <NapToggle
+              id={`construido-${nap.id}`}
+              label="Construido"
+              checked={nap.construido}
+              disabled={busy}
+              busy={busy}
+              onCheckedChange={handleConstruidoToggle}
+            />
             <PhotoCarousel
               photos={construidoPhotos.map((p) => ({ id: p.id, url: p.url }))}
               onDelete={deletePhoto}
@@ -155,12 +154,11 @@ export function NapCard({
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                className="w-full"
+                className="h-11 w-full"
                 disabled={busy}
                 onClick={() => construidoInputRef.current?.click()}
               >
-                <Camera className="mr-1 h-3.5 w-3.5" /> Subir foto
+                <Camera className="mr-1.5 size-4" /> Subir foto
               </Button>
             )}
             <input
@@ -176,17 +174,15 @@ export function NapCard({
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id={`pruebas-${nap.id}`}
-                checked={nap.pruebas_opticas}
-                disabled={busy}
-                onCheckedChange={(v) => handlePruebasToggle(Boolean(v))}
-              />
-              <Label htmlFor={`pruebas-${nap.id}`}>Pruebas ópticas</Label>
-              {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-            </div>
+          <div className="space-y-2.5">
+            <NapToggle
+              id={`pruebas-${nap.id}`}
+              label="Pruebas ópticas"
+              checked={nap.pruebas_opticas}
+              disabled={busy}
+              busy={busy}
+              onCheckedChange={handlePruebasToggle}
+            />
             <PhotoCarousel
               photos={pruebasPhotos.map((p) => ({ id: p.id, url: p.url }))}
               onDelete={deletePhoto}
@@ -195,12 +191,11 @@ export function NapCard({
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                className="w-full"
+                className="h-11 w-full"
                 disabled={busy}
                 onClick={() => pruebasExtraInputRef.current?.click()}
               >
-                <Plus className="mr-1 h-3.5 w-3.5" /> Agregar foto ({pruebasPhotos.length}/{PHOTO_LIMITS.pr_optica})
+                <Plus className="mr-1.5 size-4" /> Agregar foto ({pruebasPhotos.length}/{PHOTO_LIMITS.pr_optica})
               </Button>
             )}
             <input

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { ProgressRing } from "@/components/ui/progress-ring";
 
 export type PdRow = {
   id: string;
@@ -32,10 +32,10 @@ export function PdTable({ rows }: { rows: PdRow[] }) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="border-line hover:bg-transparent">
+          <TableHead className="w-14">% ODN</TableHead>
           <TableHead>Código</TableHead>
           <TableHead>Proveedor</TableHead>
-          <TableHead>% ODN</TableHead>
           <TableHead>Construidos</TableHead>
           <TableHead>Pruebas ópticas</TableHead>
           <TableHead>Última actualización</TableHead>
@@ -43,25 +43,25 @@ export function PdTable({ rows }: { rows: PdRow[] }) {
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={row.id} className="cursor-pointer">
-            <TableCell className="font-medium">
+          <TableRow key={row.id} className="border-line">
+            <TableCell>
+              <Link href={`/dashboard/pds/${row.id}`}>
+                <ProgressRing value={row.pctOdn} size={40} />
+              </Link>
+            </TableCell>
+            <TableCell className="font-mono font-medium">
               <Link href={`/dashboard/pds/${row.id}`} className="hover:underline">
                 {row.code}
               </Link>
             </TableCell>
-            <TableCell>{row.providerName ?? "—"}</TableCell>
-            <TableCell>
-              <Badge variant={row.pctOdn >= 100 ? "default" : "secondary"}>{row.pctOdn}%</Badge>
-            </TableCell>
-            <TableCell>
+            <TableCell className="text-muted-foreground">{row.providerName ?? "—"}</TableCell>
+            <TableCell className="font-mono text-sm">
               {row.construidos}/{row.total}
             </TableCell>
-            <TableCell>
+            <TableCell className="font-mono text-sm">
               {row.pruebasOpticas}/{row.total}
             </TableCell>
-            <TableCell className="text-muted-foreground">
-              {row.lastUpdate ?? "—"}
-            </TableCell>
+            <TableCell className="text-muted-foreground">{row.lastUpdate ?? "—"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

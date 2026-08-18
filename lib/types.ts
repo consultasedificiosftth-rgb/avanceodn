@@ -11,6 +11,7 @@ export type AdminProfile = {
   full_name: string | null;
   role: AdminRole;
   region_id: string | null;
+  force_password_change: boolean;
   created_at: string;
 };
 
