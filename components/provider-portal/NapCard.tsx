@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Camera, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoCarousel } from "@/components/provider-portal/PhotoCarousel";
 import { ConfirmDismissModal } from "@/components/provider-portal/ConfirmDismissModal";
 import { NapToggle } from "@/components/provider-portal/NapToggle";
 import { compressImage } from "@/lib/image/compress";
 import { PHOTO_LIMITS, type Nap, type NapPhoto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export type NapWithPhotos = Nap & { nap_photos: (NapPhoto & { url: string | null })[] };
@@ -25,6 +25,7 @@ export function NapCard({
   onChange: (updated: NapWithPhotos) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [confirmField, setConfirmField] = useState<"construido" | "pruebas_opticas" | null>(null);
   const construidoInputRef = useRef<HTMLInputElement>(null);
   const pruebasInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +33,7 @@ export function NapCard({
 
   const construidoPhotos = nap.nap_photos.filter((p) => p.category === "construido");
   const pruebasPhotos = nap.nap_photos.filter((p) => p.category === "pr_optica");
+  const totalPhotos = construidoPhotos.length + pruebasPhotos.length;
 
   async function patchField(field: "construido" | "pruebas_opticas", value: boolean) {
     setBusy(true);
@@ -122,6 +124,8 @@ export function NapCard({
       setConfirmField("pruebas_opticas");
       return;
     }
+    // Se expande para que el carrusel quede a la vista apenas se suba la foto.
+    setExpanded(true);
     if (pruebasPhotos.length > 0) {
       patchField("pruebas_opticas", true);
     } else {
@@ -132,101 +136,127 @@ export function NapCard({
   const pruebasRemaining = PHOTO_LIMITS.pr_optica - pruebasPhotos.length;
 
   return (
-    <Card className="gap-4 border-line bg-card py-4">
-      <CardHeader className="px-4">
-        <span className="font-mono text-xl font-semibold tracking-tight text-foreground">
+    <div className="border-b border-line last:border-b-0">
+      <div className="flex min-h-14 items-center gap-2 px-3 py-2">
+        <span className="min-w-0 flex-1 truncate font-mono text-sm font-semibold text-foreground">
           {nap.code}
         </span>
-      </CardHeader>
-      <CardContent className="space-y-5 px-4">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="space-y-2.5">
-            <NapToggle
-              id={`construido-${nap.id}`}
-              label="Construido"
-              checked={nap.construido}
-              disabled={busy}
-              busy={busy}
-              onCheckedChange={handleConstruidoToggle}
-            />
-            <PhotoCarousel
-              photos={construidoPhotos.map((p) => ({ id: p.id, url: p.url }))}
-              onDelete={deletePhoto}
-            />
-            {construidoPhotos.length === 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-full"
-                disabled={busy}
-                onClick={() => construidoInputRef.current?.click()}
-              >
-                <Camera className="mr-1.5 size-4" /> Subir foto
-              </Button>
-            )}
-            <input
-              ref={construidoInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.length) uploadPhotos(e.target.files, "construido");
-                e.target.value = "";
-              }}
-            />
-          </div>
 
-          <div className="space-y-2.5">
-            <NapToggle
-              id={`pruebas-${nap.id}`}
-              label="Pruebas ópticas"
-              checked={nap.pruebas_opticas}
-              disabled={busy}
-              busy={busy}
-              onCheckedChange={handlePruebasToggle}
-            />
-            <PhotoCarousel
-              photos={pruebasPhotos.map((p) => ({ id: p.id, url: p.url }))}
-              onDelete={deletePhoto}
-            />
-            {pruebasRemaining > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-full"
-                disabled={busy}
-                onClick={() => pruebasExtraInputRef.current?.click()}
-              >
-                <Plus className="mr-1.5 size-4" /> Agregar foto ({pruebasPhotos.length}/{PHOTO_LIMITS.pr_optica})
-              </Button>
-            )}
-            <input
-              ref={pruebasInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.length) uploadPhotos(e.target.files, "pr_optica");
-                e.target.value = "";
-              }}
-            />
-            <input
-              ref={pruebasExtraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.length) uploadPhotos(e.target.files, "pr_optica");
-                e.target.value = "";
-              }}
-            />
+        <NapToggle
+          id={`construido-${nap.id}`}
+          label="Constr."
+          checked={nap.construido}
+          disabled={busy}
+          busy={busy}
+          onCheckedChange={handleConstruidoToggle}
+        />
+        <NapToggle
+          id={`pruebas-${nap.id}`}
+          label="P.O."
+          checked={nap.pruebas_opticas}
+          disabled={busy}
+          busy={busy}
+          onCheckedChange={handlePruebasToggle}
+        />
+
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-lg px-1.5 text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
+          aria-expanded={expanded}
+          aria-label={expanded ? "Ocultar fotos" : "Ver fotos"}
+        >
+          <Camera className="size-4" />
+          <span className="text-xs font-semibold tabular-nums">{totalPhotos}</span>
+          <ChevronDown
+            className={cn("size-3.5 transition-transform duration-200", expanded && "rotate-180")}
+          />
+        </button>
+      </div>
+
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-200 ease-out",
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+        aria-hidden={!expanded}
+      >
+        <div className="overflow-hidden">
+          <div className="grid grid-cols-1 gap-4 border-t border-line/60 bg-surface/40 px-3 pb-4 pt-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Construido</p>
+              <PhotoCarousel
+                photos={construidoPhotos.map((p) => ({ id: p.id, url: p.url }))}
+                onDelete={deletePhoto}
+              />
+              {construidoPhotos.length === 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full"
+                  disabled={busy}
+                  onClick={() => construidoInputRef.current?.click()}
+                >
+                  <Camera className="mr-1.5 size-4" /> Subir foto
+                </Button>
+              )}
+              <input
+                ref={construidoInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) uploadPhotos(e.target.files, "construido");
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Pruebas ópticas</p>
+              <PhotoCarousel
+                photos={pruebasPhotos.map((p) => ({ id: p.id, url: p.url }))}
+                onDelete={deletePhoto}
+              />
+              {pruebasRemaining > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full"
+                  disabled={busy}
+                  onClick={() => pruebasExtraInputRef.current?.click()}
+                >
+                  <Plus className="mr-1.5 size-4" /> Agregar foto ({pruebasPhotos.length}/{PHOTO_LIMITS.pr_optica})
+                </Button>
+              )}
+              <input
+                ref={pruebasInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) uploadPhotos(e.target.files, "pr_optica");
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={pruebasExtraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) uploadPhotos(e.target.files, "pr_optica");
+                  e.target.value = "";
+                }}
+              />
+            </div>
           </div>
         </div>
-      </CardContent>
+      </div>
 
       <ConfirmDismissModal
         open={confirmField !== null}
@@ -235,6 +265,6 @@ export function NapCard({
         keepsPhotos={confirmField === "pruebas_opticas"}
         onConfirm={() => confirmField && patchField(confirmField, false)}
       />
-    </Card>
+    </div>
   );
 }

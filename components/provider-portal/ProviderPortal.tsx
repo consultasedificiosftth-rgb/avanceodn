@@ -103,23 +103,25 @@ export function ProviderPortal({
         </div>
       </header>
 
-      <main className="mx-auto mt-4 max-w-3xl space-y-3 px-4">
+      <main className="mx-auto mt-4 max-w-3xl px-4">
         {naps.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Todavía no hay NAPs cargados en esta PD.
           </p>
         ) : (
-          naps.map((nap) => (
-            <NapCard
-              key={nap.id}
-              providerToken={providerToken}
-              pdId={pdId}
-              nap={nap}
-              onChange={(updated) =>
-                setNaps((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
-              }
-            />
-          ))
+          <div className="overflow-hidden rounded-xl border border-line bg-card">
+            {naps.map((nap) => (
+              <NapCard
+                key={nap.id}
+                providerToken={providerToken}
+                pdId={pdId}
+                nap={nap}
+                onChange={(updated) =>
+                  setNaps((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
+                }
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>

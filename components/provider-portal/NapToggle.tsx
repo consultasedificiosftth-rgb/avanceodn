@@ -5,10 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 /**
- * Toggle grande para el portal del proveedor: fila completa como zona de
- * toque (>= 44px de alto), pensado para usarse en el campo, a veces con
- * guantes. Envuelve el mismo Checkbox de shadcn — la lógica de
- * tildar/destildar vive en el componente que lo usa.
+ * Toggle compacto para la fila de NAP del portal del proveedor. El
+ * control visual es chico pero la fila (label + checkbox + padding)
+ * mantiene una zona de toque real >= 44px de alto, pensada para
+ * usarse en el campo, a veces con guantes.
  */
 export function NapToggle({
   id,
@@ -29,25 +29,26 @@ export function NapToggle({
     <label
       htmlFor={id}
       className={cn(
-        "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors",
-        checked ? "border-signal bg-signal/10" : "border-line bg-surface active:bg-surface-raised",
+        "flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-1.5 transition-colors",
+        checked ? "text-signal" : "text-muted-foreground",
         disabled && "pointer-events-none opacity-60"
       )}
     >
-      <span className="text-base font-medium text-foreground">{label}</span>
-      <span className="flex items-center gap-2.5">
-        {busy && <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />}
+      {busy ? (
+        <Loader2 className="size-4 shrink-0 animate-spin" />
+      ) : (
         <Checkbox
           id={id}
           checked={checked}
           disabled={disabled}
           onCheckedChange={(v) => onCheckedChange(Boolean(v))}
           className={cn(
-            "size-7 rounded-lg border-2 border-line [&_svg]:size-4",
+            "size-[18px] shrink-0 rounded-[5px] border-2 border-line [&_svg]:size-3",
             "data-checked:border-signal data-checked:bg-signal data-checked:text-signal-foreground"
           )}
         />
-      </span>
+      )}
+      <span className="whitespace-nowrap text-xs font-semibold">{label}</span>
     </label>
   );
 }
