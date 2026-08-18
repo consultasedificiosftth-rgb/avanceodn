@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Barlow_Condensed } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -41,6 +42,7 @@ export default function RootLayout({
           "font-sans antialiased"
         )}
       >
+        <NextTopLoader color="var(--signal)" height={3} showSpinner={false} shadow={false} />
         {children}
         <Toaster />
       </body>
