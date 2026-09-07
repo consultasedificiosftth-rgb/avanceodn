@@ -5,12 +5,18 @@ import { useRouter } from "next/navigation";
 import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFileDrop } from "@/lib/hooks/useFileDrop";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export function ReuploadForm({ pdId }: { pdId: string }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const { isDraggingOver, dropHandlers } = useFileDrop((files) => {
+    if (files[0]) setFile(files[0]);
+  }, submitting);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,12 +47,20 @@ export function ReuploadForm({ pdId }: { pdId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
-      <Input
-        type="file"
-        accept=".xlsx,.xls"
-        className="w-64"
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-      />
+      <div
+        {...dropHandlers}
+        className={cn(
+          "rounded-lg border-2 border-dashed p-1 transition-colors",
+          isDraggingOver ? "border-signal bg-signal/5" : "border-transparent"
+        )}
+      >
+        <Input
+          type="file"
+          accept=".xlsx,.xls"
+          className="w-64"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+      </div>
       <Button type="submit" variant="outline" size="sm" disabled={!file || submitting}>
         {submitting ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1 h-3.5 w-3.5" />}
         Re-cargar Excel

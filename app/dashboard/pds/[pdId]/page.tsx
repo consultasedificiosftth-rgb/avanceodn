@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentAdmin } from "@/lib/auth";
+import { getCurrentAdmin, canAccessRegion } from "@/lib/auth";
 import { signPhotoUrls } from "@/lib/storage";
 import { pctOdn, type Nap, type NapPhoto, type PdDailySnapshot } from "@/lib/types";
 import { ProgressRing } from "@/components/ui/progress-ring";
@@ -10,6 +10,9 @@ import { NapList, type NapListItem } from "@/components/dashboard/NapList";
 import { PendingReviewBanner } from "@/components/dashboard/PendingReviewBanner";
 import { ReuploadForm } from "@/components/dashboard/ReuploadForm";
 import { ExportButtons } from "@/components/dashboard/ExportButtons";
+import { ReassignProviderModal } from "@/components/dashboard/ReassignProviderModal";
+import { DeletePdModal } from "@/components/dashboard/DeletePdModal";
+import { GoToProviderSiteButton } from "@/components/dashboard/GoToProviderSiteButton";
 
 export default async function PdDetailPage({
   params,
@@ -22,7 +25,7 @@ export default async function PdDetailPage({
 
   const { data: pd } = await supabase
     .from("pds")
-    .select("*, providers(name), regions(name)")
+    .select("*, providers(name, link_token), regions(name)")
     .eq("id", pdId)
     .maybeSingle();
 
@@ -40,6 +43,12 @@ export default async function PdDetailPage({
     .select("*")
     .eq("pd_id", pdId)
     .order("snapshot_date", { ascending: false });
+
+  const { data: providers } = await supabase
+    .from("providers")
+    .select("id, name")
+    .eq("active", true)
+    .order("name");
 
   const { data: pendingUpload } = await supabase
     .from("pd_uploads")
@@ -75,8 +84,11 @@ export default async function PdDetailPage({
   const construidos = napsTyped.filter((n) => n.construido).length;
   const pruebasOpticas = napsTyped.filter((n) => n.pruebas_opticas).length;
 
-  const providerName = (pd.providers as unknown as { name: string } | null)?.name ?? "—";
+  const providerInfo = pd.providers as unknown as { name: string; link_token: string } | null;
+  const providerName = providerInfo?.name ?? "—";
+  const providerLinkToken = providerInfo?.link_token ?? null;
   const regionName = (pd.regions as unknown as { name: string } | null)?.name ?? "—";
+  const canManagePd = admin !== null && canAccessRegion(admin, pd.region_id);
 
   return (
     <div className="space-y-6">
@@ -100,7 +112,19 @@ export default async function PdDetailPage({
             </div>
           </div>
         </div>
-        <ExportButtons scope="pd" pdId={pd.id} />
+        <div className="flex flex-wrap items-center gap-2">
+          {canManagePd && (
+            <ReassignProviderModal
+              pdId={pd.id}
+              currentProviderId={pd.provider_id}
+              currentProviderName={providerName}
+              providers={providers ?? []}
+            />
+          )}
+          <ExportButtons scope="pd" pdId={pd.id} />
+          <GoToProviderSiteButton pdId={pd.id} linkToken={providerLinkToken} />
+          {canManagePd && <DeletePdModal pdId={pd.id} pdCode={pd.code} redirectTo="/dashboard" />}
+        </div>
       </div>
 
       {pendingUpload && (

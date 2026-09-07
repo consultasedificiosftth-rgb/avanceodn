@@ -17,7 +17,7 @@ export default async function DashboardPage({
 
   const { data: pds } = await supabase
     .from("pds")
-    .select("id, code, provider_id, providers(name)")
+    .select("id, code, provider_id, providers(name, link_token)")
     .order("code", { ascending: true });
 
   const { data: providers } = await supabase.from("providers").select("id, name").eq("active", true);
@@ -25,7 +25,11 @@ export default async function DashboardPage({
   const pdIds = (pds ?? []).map((p) => p.id);
 
   const { data: naps } = pdIds.length
-    ? await supabase.from("naps").select("pd_id, construido, pruebas_opticas").in("pd_id", pdIds).eq("active", true)
+    ? await supabase
+        .from("naps")
+        .select("pd_id, code, construido, pruebas_opticas")
+        .in("pd_id", pdIds)
+        .eq("active", true)
     : { data: [] };
 
   const { data: snapshots } = pdIds.length
@@ -41,7 +45,7 @@ export default async function DashboardPage({
     if (!lastUpdateByPd.has(s.pd_id)) lastUpdateByPd.set(s.pd_id, s.snapshot_date);
   }
 
-  const napsByPd = new Map<string, { construido: boolean; pruebas_opticas: boolean }[]>();
+  const napsByPd = new Map<string, { code: string; construido: boolean; pruebas_opticas: boolean }[]>();
   for (const n of naps ?? []) {
     const arr = napsByPd.get(n.pd_id) ?? [];
     arr.push(n);
@@ -53,15 +57,22 @@ export default async function DashboardPage({
     const total = pdNaps.length;
     const construidos = pdNaps.filter((n) => n.construido).length;
     const pruebasOpticas = pdNaps.filter((n) => n.pruebas_opticas).length;
+    const constructedNapCodes = pdNaps
+      .filter((n) => n.construido)
+      .map((n) => n.code)
+      .sort();
+    const providerInfo = pd.providers as unknown as { name: string; link_token: string } | null;
     return {
       id: pd.id,
       code: pd.code,
-      providerName: (pd.providers as unknown as { name: string } | null)?.name ?? null,
+      providerName: providerInfo?.name ?? null,
+      providerLinkToken: providerInfo?.link_token ?? null,
       total,
       construidos,
       pruebasOpticas,
       pctOdn: pctOdn(construidos, total),
       lastUpdate: lastUpdateByPd.get(pd.id) ?? null,
+      constructedNapCodes,
     };
   });
 

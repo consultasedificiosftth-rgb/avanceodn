@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useFileDrop } from "@/lib/hooks/useFileDrop";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 type Region = { id: string; name: string };
@@ -50,6 +52,10 @@ export function NewPdForm({
   const [copied, setCopied] = useState(false);
 
   const usingNewProvider = providerId === "__new__";
+
+  const { isDraggingOver, dropHandlers } = useFileDrop((files) => {
+    if (files[0]) setFile(files[0]);
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -206,12 +212,23 @@ export function NewPdForm({
 
       <div className="space-y-2">
         <Label htmlFor="file">Archivo Excel</Label>
-        <Input
-          id="file"
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        />
+        <div
+          {...dropHandlers}
+          className={cn(
+            "rounded-lg border-2 border-dashed p-4 text-center transition-colors",
+            isDraggingOver ? "border-signal bg-signal/5" : "border-line"
+          )}
+        >
+          <Input
+            id="file"
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            {file ? file.name : "Arrastrá el Excel acá o elegilo con el botón"}
+          </p>
+        </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

@@ -191,11 +191,11 @@ Tres botones de exportación, todos generan un `.zip`:
   NAP (PD, código, construido, pruebas ópticas, fechas, % de su PD) +
   carpeta de fotos con árbol `Proveedor / PD / NAP / CONSTRUIDO` y
   `Proveedor / PD / NAP / PR_OPTICA`.
-- **Por PD**: mismo formato, acotado a una PD.
+- **Por PD**: mismo formato, acotado a una PD, con un selector previo a la
+  descarga ("Ambas" por defecto, "Solo construido" o "Solo pruebas
+  ópticas") que filtra qué rama de fotos entra al zip — el Excel de la PD
+  siempre lleva todos los datos de estado, sin importar la opción elegida.
 - **Por NAP**: ficha individual de un NAP (Excel de 1 fila + sus fotos).
-- **Botón rápido "Solo pruebas ópticas" por PD**: descarga únicamente la
-  rama de fotos `.../PR_OPTICA` de todos los NAPs de esa PD, sin el resto
-  del árbol, para facilitar la carga de potencia a Maximo.
 
 ### 6.5 Gestión de administrativos (solo superadmin)
 - CRUD simple de `admin_profiles`: crear admin con email/contraseña (usa
@@ -222,8 +222,7 @@ app/
   api/
     pds/route.ts                  -- POST alta de PD (parseo + purga de Excel)
     pds/[pdId]/upload/route.ts    -- POST re-carga de Excel (diff)
-    pds/[pdId]/export/route.ts    -- GET zip de exportación por PD
-    pds/[pdId]/export-pr-optica/route.ts
+    pds/[pdId]/export/route.ts    -- GET zip de exportación por PD (?categories=both|construido|pr_optica)
     export/global/route.ts        -- GET zip global
     naps/[napId]/export/route.ts  -- GET ficha individual
     naps/[napId]/remove/route.ts  -- POST llama RPC remove_nap

@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/api/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { collectExportRows } from "@/lib/export/collectData";
 import { buildExcelBuffer } from "@/lib/export/buildExcel";
-import { buildFullExportZip } from "@/lib/export/buildZip";
+import { buildExportZip } from "@/lib/export/buildZip";
 
 export async function GET() {
   const authResult = await requireAdmin();
@@ -25,7 +25,11 @@ export async function GET() {
 
   const rows = await collectExportRows(supabase, { pdIds });
   const excelBuffer = await buildExcelBuffer(rows);
-  const zipBuffer = await buildFullExportZip(supabase, rows, excelBuffer, "reporte_global.xlsx");
+  const zipBuffer = await buildExportZip(supabase, rows, {
+    categories: "both",
+    excelBuffer,
+    excelFilename: "reporte_global.xlsx",
+  });
 
   return new NextResponse(new Uint8Array(zipBuffer), {
     headers: {

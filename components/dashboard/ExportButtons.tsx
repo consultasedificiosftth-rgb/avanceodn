@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PdExportControl } from "@/components/dashboard/PdExportControl";
 
 export function ExportButtons({
   scope,
@@ -21,20 +22,7 @@ export function ExportButtons({
   }
 
   if (scope === "pd" && pdId) {
-    return (
-      <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline" size="sm">
-          <a href={`/api/pds/${pdId}/export`}>
-            <Download className="mr-1 h-3.5 w-3.5" /> Exportar PD
-          </a>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <a href={`/api/pds/${pdId}/export-pr-optica`}>
-            <Download className="mr-1 h-3.5 w-3.5" /> Solo pruebas ópticas
-          </a>
-        </Button>
-      </div>
-    );
+    return <PdExportControl pdId={pdId} />;
   }
 
   if (scope === "nap" && napId) {

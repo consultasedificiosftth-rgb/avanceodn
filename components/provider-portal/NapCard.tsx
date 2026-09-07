@@ -8,6 +8,7 @@ import { ConfirmDismissModal } from "@/components/provider-portal/ConfirmDismiss
 import { NapToggle } from "@/components/provider-portal/NapToggle";
 import { compressImage } from "@/lib/image/compress";
 import { PHOTO_LIMITS, type Nap, type NapPhoto } from "@/lib/types";
+import { useFileDrop } from "@/lib/hooks/useFileDrop";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -34,6 +35,8 @@ export function NapCard({
   const construidoPhotos = nap.nap_photos.filter((p) => p.category === "construido");
   const pruebasPhotos = nap.nap_photos.filter((p) => p.category === "pr_optica");
   const totalPhotos = construidoPhotos.length + pruebasPhotos.length;
+  const construidoRemaining = PHOTO_LIMITS.construido - construidoPhotos.length;
+  const pruebasRemaining = PHOTO_LIMITS.pr_optica - pruebasPhotos.length;
 
   async function patchField(field: "construido" | "pruebas_opticas", value: boolean) {
     setBusy(true);
@@ -54,7 +57,7 @@ export function NapCard({
     }
   }
 
-  async function uploadPhotos(files: FileList, category: "construido" | "pr_optica") {
+  async function uploadPhotos(files: FileList | File[], category: "construido" | "pr_optica") {
     setBusy(true);
     try {
       let latestNapPatch: Partial<Nap> = {};
@@ -133,7 +136,25 @@ export function NapCard({
     }
   }
 
-  const pruebasRemaining = PHOTO_LIMITS.pr_optica - pruebasPhotos.length;
+  const { isDraggingOver: isDraggingConstruido, dropHandlers: construidoDropHandlers } = useFileDrop(
+    (files) => {
+      const toUpload = Array.from(files).slice(0, construidoRemaining);
+      if (toUpload.length > 0) uploadPhotos(toUpload, "construido");
+    },
+    busy || construidoRemaining <= 0
+  );
+
+  const { isDraggingOver: isDraggingPruebas, dropHandlers: pruebasDropHandlers } = useFileDrop((files) => {
+    const dropped = Array.from(files);
+    const toUpload = dropped.slice(0, pruebasRemaining);
+    const overflow = dropped.length - toUpload.length;
+    if (toUpload.length > 0) uploadPhotos(toUpload, "pr_optica");
+    if (overflow > 0) {
+      toast.error(
+        `${overflow} foto${overflow === 1 ? "" : "s"} no se subieron: se alcanzó el límite de ${PHOTO_LIMITS.pr_optica} fotos de pruebas ópticas.`
+      );
+    }
+  }, busy || pruebasRemaining <= 0);
 
   return (
     <div className="border-b border-line last:border-b-0">
@@ -183,7 +204,13 @@ export function NapCard({
       >
         <div className="overflow-hidden">
           <div className="grid grid-cols-1 gap-4 border-t border-line/60 bg-surface/40 px-3 pb-4 pt-3 sm:grid-cols-2">
-            <div className="space-y-2">
+            <div
+              {...construidoDropHandlers}
+              className={cn(
+                "space-y-2 rounded-lg border-2 border-dashed p-2 transition-colors",
+                isDraggingConstruido ? "border-signal bg-signal/5" : "border-transparent"
+              )}
+            >
               <p className="text-xs font-medium text-muted-foreground">Construido</p>
               <PhotoCarousel
                 photos={construidoPhotos.map((p) => ({ id: p.id, url: p.url }))}
@@ -213,7 +240,13 @@ export function NapCard({
               />
             </div>
 
-            <div className="space-y-2">
+            <div
+              {...pruebasDropHandlers}
+              className={cn(
+                "space-y-2 rounded-lg border-2 border-dashed p-2 transition-colors",
+                isDraggingPruebas ? "border-signal bg-signal/5" : "border-transparent"
+              )}
+            >
               <p className="text-xs font-medium text-muted-foreground">Pruebas ópticas</p>
               <PhotoCarousel
                 photos={pruebasPhotos.map((p) => ({ id: p.id, url: p.url }))}

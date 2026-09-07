@@ -14,7 +14,7 @@ superadmin). Para el primer usuario hay que hacerlo a mano, una única vez:
 
    ```sql
    insert into admin_profiles (id, full_name, role, region_id, force_password_change)
-   values ('<uuid del usuario creado en Supabase Auth>', 'Mi nombre', 'superadmin', null, false);
+   values ('871094f8-fe97-4243-ae01-13cc1172e197', 'Matias Rivero', 'superadmin', null, false);
    ```
 
    - `role` tiene que ser `'superadmin'` y `region_id` tiene que ser `null`

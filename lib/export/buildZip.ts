@@ -58,23 +58,24 @@ async function appendPhotos(
   }
 }
 
-export async function buildFullExportZip(
+export type ExportCategoriesOption = "both" | PhotoCategory;
+
+function resolveCategories(option: ExportCategoriesOption): PhotoCategory[] {
+  return option === "both" ? ["construido", "pr_optica"] : [option];
+}
+
+// El Excel siempre va completo; `categories` solo filtra qué fotos entran al zip.
+export async function buildExportZip(
   supabase: SupabaseClient,
   rows: ExportNapRow[],
-  excelBuffer: Buffer,
-  excelFilename = "reporte.xlsx"
+  {
+    categories,
+    excelBuffer,
+    excelFilename = "reporte.xlsx",
+  }: { categories: ExportCategoriesOption; excelBuffer: Buffer; excelFilename?: string }
 ): Promise<Buffer> {
   return collectZipBuffer(async (archive) => {
     archive.append(excelBuffer, { name: excelFilename });
-    await appendPhotos(archive, supabase, rows, ["construido", "pr_optica"]);
-  });
-}
-
-export async function buildPrOpticaOnlyZip(
-  supabase: SupabaseClient,
-  rows: ExportNapRow[]
-): Promise<Buffer> {
-  return collectZipBuffer(async (archive) => {
-    await appendPhotos(archive, supabase, rows, ["pr_optica"]);
+    await appendPhotos(archive, supabase, rows, resolveCategories(categories));
   });
 }
