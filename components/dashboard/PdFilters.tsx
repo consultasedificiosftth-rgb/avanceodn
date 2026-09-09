@@ -8,11 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export function PdFilters({
   providers,
+  search,
+  onSearchChange,
 }: {
   providers: { id: string; name: string }[];
+  search: string;
+  onSearchChange: (value: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,12 +30,19 @@ export function PdFilters({
   }
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <Input
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Buscar PD…"
+        className="w-full sm:w-48"
+      />
+
       <Select
         defaultValue={searchParams.get("provider") ?? "all"}
         onValueChange={(v) => setParam("provider", v)}
       >
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-full sm:w-48">
           <SelectValue placeholder="Proveedor" />
         </SelectTrigger>
         <SelectContent>
@@ -47,7 +59,7 @@ export function PdFilters({
         defaultValue={searchParams.get("status") ?? "all"}
         onValueChange={(v) => setParam("status", v)}
       >
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-full sm:w-48">
           <SelectValue placeholder="Estado de avance" />
         </SelectTrigger>
         <SelectContent>

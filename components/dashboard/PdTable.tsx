@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { DeletePdModal } from "@/components/dashboard/DeletePdModal";
 import { GoToProviderSiteButton } from "@/components/dashboard/GoToProviderSiteButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type PdRow = {
   id: string;
@@ -30,6 +31,13 @@ export type PdRow = {
 
 export function PdTable({ rows }: { rows: PdRow[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  async function copyNapCodes(row: PdRow) {
+    await navigator.clipboard.writeText(row.constructedNapCodes.join("\n"));
+    setCopiedId(row.id);
+    setTimeout(() => setCopiedId((current) => (current === row.id ? null : current)), 1500);
+  }
 
   if (rows.length === 0) {
     return (
@@ -103,12 +111,35 @@ export function PdTable({ rows }: { rows: PdRow[] }) {
                         Todavía no hay NAPs construidos en esta PD.
                       </p>
                     ) : (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                        {row.constructedNapCodes.map((code) => (
-                          <span key={code} className="font-mono text-sm text-foreground">
-                            {code}
-                          </span>
-                        ))}
+                      <div className="max-w-xs">
+                        <div className="mb-1.5 flex items-center justify-end">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="Copiar lista"
+                                onClick={() => copyNapCodes(row)}
+                                className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                              >
+                                {copiedId === row.id ? (
+                                  <Check className="size-3.5" />
+                                ) : (
+                                  <Copy className="size-3.5" />
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Copiar lista</TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <div className="max-h-[240px] overflow-y-auto">
+                          <div className="flex flex-col gap-1">
+                            {row.constructedNapCodes.map((code) => (
+                              <span key={code} className="font-mono text-sm text-foreground">
+                                {code}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </TableCell>

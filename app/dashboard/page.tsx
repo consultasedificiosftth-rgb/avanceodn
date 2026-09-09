@@ -2,8 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdmin } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { PdTable, type PdRow } from "@/components/dashboard/PdTable";
-import { PdFilters } from "@/components/dashboard/PdFilters";
+import { type PdRow } from "@/components/dashboard/PdTable";
+import { PdDashboardBody } from "@/components/dashboard/PdDashboardBody";
 import { pctOdn } from "@/lib/types";
 
 export default async function DashboardPage({
@@ -24,28 +24,33 @@ export default async function DashboardPage({
 
   const pdIds = (pds ?? []).map((p) => p.id);
 
+  // Solo para el desplegable de "NAPs construidos" al expandir una fila:
+  // ese sí necesita los códigos reales de naps, no vive en el snapshot.
   const { data: naps } = pdIds.length
     ? await supabase
         .from("naps")
-        .select("pd_id, code, construido, pruebas_opticas")
+        .select("pd_id, code, construido")
         .in("pd_id", pdIds)
         .eq("active", true)
     : { data: [] };
 
-  const { data: snapshots } = pdIds.length
+  // Conteos y % ODN del listado: se leen del snapshot más reciente de
+  // cada PD (pd_latest_snapshots, ver 07_migration_pd_latest_snapshots_view.sql)
+  // en vez de contarlos en vivo sobre naps, que se truncaba silenciosamente
+  // para PDs con muchos NAPs activos (fetch sin order/límite > 1000 filas
+  // por defecto de PostgREST).
+  const { data: latestSnapshots } = pdIds.length
     ? await supabase
-        .from("pd_daily_snapshots")
-        .select("pd_id, snapshot_date")
+        .from("pd_latest_snapshots")
+        .select("pd_id, snapshot_date, total_naps, construidos, pruebas_opticas")
         .in("pd_id", pdIds)
-        .order("snapshot_date", { ascending: false })
     : { data: [] };
 
-  const lastUpdateByPd = new Map<string, string>();
-  for (const s of snapshots ?? []) {
-    if (!lastUpdateByPd.has(s.pd_id)) lastUpdateByPd.set(s.pd_id, s.snapshot_date);
-  }
+  const snapshotByPd = new Map(
+    (latestSnapshots ?? []).map((s) => [s.pd_id, s])
+  );
 
-  const napsByPd = new Map<string, { code: string; construido: boolean; pruebas_opticas: boolean }[]>();
+  const napsByPd = new Map<string, { code: string; construido: boolean }[]>();
   for (const n of naps ?? []) {
     const arr = napsByPd.get(n.pd_id) ?? [];
     arr.push(n);
@@ -53,11 +58,11 @@ export default async function DashboardPage({
   }
 
   let rows: PdRow[] = (pds ?? []).map((pd) => {
-    const pdNaps = napsByPd.get(pd.id) ?? [];
-    const total = pdNaps.length;
-    const construidos = pdNaps.filter((n) => n.construido).length;
-    const pruebasOpticas = pdNaps.filter((n) => n.pruebas_opticas).length;
-    const constructedNapCodes = pdNaps
+    const snapshot = snapshotByPd.get(pd.id);
+    const total = snapshot?.total_naps ?? 0;
+    const construidos = snapshot?.construidos ?? 0;
+    const pruebasOpticas = snapshot?.pruebas_opticas ?? 0;
+    const constructedNapCodes = (napsByPd.get(pd.id) ?? [])
       .filter((n) => n.construido)
       .map((n) => n.code)
       .sort();
@@ -71,7 +76,7 @@ export default async function DashboardPage({
       construidos,
       pruebasOpticas,
       pctOdn: pctOdn(construidos, total),
-      lastUpdate: lastUpdateByPd.get(pd.id) ?? null,
+      lastUpdate: snapshot?.snapshot_date ?? null,
       constructedNapCodes,
     };
   });
@@ -92,11 +97,7 @@ export default async function DashboardPage({
         </Button>
       </div>
 
-      <PdFilters providers={providers ?? []} />
-
-      <div className="rounded-lg border border-line bg-card">
-        <PdTable rows={rows} />
-      </div>
+      <PdDashboardBody rows={rows} providers={providers ?? []} />
     </div>
   );
 }
