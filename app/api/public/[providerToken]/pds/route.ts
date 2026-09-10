@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveProviderByToken } from "@/lib/api/publicAuth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPublicReadClient } from "@/lib/supabase/admin";
 import { pctOdn } from "@/lib/types";
 
 // Mismo motivo que en pds/[pdId]/naps/route.ts: sin esto, Next puede cachear
@@ -18,7 +18,7 @@ export async function GET(
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }
 
-  const supabase = createAdminClient();
+  const supabase = createPublicReadClient();
 
   const { data: pds, error: pdsError } = await supabase
     .from("pds")

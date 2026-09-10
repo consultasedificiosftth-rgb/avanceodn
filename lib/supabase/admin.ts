@@ -18,3 +18,29 @@ export function createAdminClient() {
     }
   );
 }
+
+/**
+ * Igual que createAdminClient(), pero manda Cache-Control/Pragma: no-cache
+ * en cada request a PostgREST. Usar solo en las rutas públicas del portal
+ * de proveedor que leen naps (GET .../pds y GET .../pds/[pdId]/naps), que
+ * mostraban construido/updated_at desactualizados pese a que el edge de
+ * Vercel confirmaba MISS en esas respuestas.
+ */
+export function createPublicReadClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      global: {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      },
+    }
+  );
+}

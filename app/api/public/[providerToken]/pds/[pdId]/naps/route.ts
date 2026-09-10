@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveProviderByToken, resolvePdForProvider } from "@/lib/api/publicAuth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPublicReadClient } from "@/lib/supabase/admin";
 import { signPhotoUrls } from "@/lib/storage";
 import { pctOdn } from "@/lib/types";
 
@@ -24,7 +24,7 @@ export async function GET(
     return NextResponse.json({ error: "Link inválido o vencido." }, { status: 404 });
   }
 
-  const supabase = createAdminClient();
+  const supabase = createPublicReadClient();
 
   const { data: naps, error: napsError } = await supabase
     .from("naps")
