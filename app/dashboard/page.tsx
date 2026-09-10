@@ -26,13 +26,27 @@ export default async function DashboardPage({
 
   // Solo para el desplegable de "NAPs construidos" al expandir una fila:
   // ese sí necesita los códigos reales de naps, no vive en el snapshot.
-  const { data: naps } = pdIds.length
-    ? await supabase
+  // Paginado en bloques porque PostgREST corta cualquier response en
+  // db.max_rows (1000 por defecto en Supabase): con muchas PDs la suma de
+  // naps activos supera esa cota y un fetch sin order()/range() se trunca
+  // en silencio, dejando afuera del Map a las PDs cuyas filas caen después
+  // del corte (mismo bug ya documentado para los conteos, ver
+  // 07_migration_pd_latest_snapshots_view.sql).
+  const naps: { pd_id: string; code: string; construido: boolean }[] = [];
+  if (pdIds.length) {
+    const PAGE_SIZE = 1000;
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const { data: page } = await supabase
         .from("naps")
         .select("pd_id, code, construido")
         .in("pd_id", pdIds)
         .eq("active", true)
-    : { data: [] };
+        .order("pd_id", { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+      naps.push(...(page ?? []));
+      if (!page || page.length < PAGE_SIZE) break;
+    }
+  }
 
   // Conteos y % ODN del listado: se leen del snapshot más reciente de
   // cada PD (pd_latest_snapshots, ver 07_migration_pd_latest_snapshots_view.sql)

@@ -22,6 +22,12 @@ export async function createClient() {
           }
         },
       },
+      global: {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      },
     }
   );
 }
