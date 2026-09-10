@@ -4,6 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { signPhotoUrls } from "@/lib/storage";
 import { pctOdn } from "@/lib/types";
 
+// Este GET usa createAdminClient() (sin cookies()/headers()), así que Next lo
+// trataría como estático y lo cachearía por combinación de params: el proveedor
+// vería el estado de construido/pruebas_opticas congelado en la primera carga.
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ providerToken: string; pdId: string }> }

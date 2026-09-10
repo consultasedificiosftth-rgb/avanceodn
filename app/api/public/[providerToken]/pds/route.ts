@@ -3,6 +3,11 @@ import { resolveProviderByToken } from "@/lib/api/publicAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { pctOdn } from "@/lib/types";
 
+// Mismo motivo que en pds/[pdId]/naps/route.ts: sin esto, Next puede cachear
+// esta respuesta (createAdminClient() no usa cookies()/headers()) y mostrar
+// el % construido desactualizado al proveedor.
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ providerToken: string }> }
