@@ -32,27 +32,31 @@ export async function GET(
 
   const pdIds = (pds ?? []).map((p) => p.id);
 
-  const { data: naps } = pdIds.length
-    ? await supabase.from("naps").select("pd_id, construido").in("pd_id", pdIds).eq("active", true)
+  // Conteos y % ODN: se leen del snapshot más reciente de cada PD
+  // (pd_latest_snapshots, ver 07_migration_pd_latest_snapshots_view.sql)
+  // en vez de contarlos en vivo sobre naps, que se truncaba silenciosamente
+  // para PDs con muchos NAPs activos (fetch sin order/límite > 1000 filas
+  // por defecto de PostgREST). Mismo fix aplicado en app/dashboard/page.tsx.
+  const { data: latestSnapshots } = pdIds.length
+    ? await supabase
+        .from("pd_latest_snapshots")
+        .select("pd_id, total_naps, construidos")
+        .in("pd_id", pdIds)
     : { data: [] };
 
-  const totalsByPd = new Map<string, { total: number; construidos: number }>();
-  for (const n of naps ?? []) {
-    const t = totalsByPd.get(n.pd_id) ?? { total: 0, construidos: 0 };
-    t.total += 1;
-    if (n.construido) t.construidos += 1;
-    totalsByPd.set(n.pd_id, t);
-  }
+  const snapshotByPd = new Map((latestSnapshots ?? []).map((s) => [s.pd_id, s]));
 
   const pdsWithStats = (pds ?? []).map((pd) => {
-    const totals = totalsByPd.get(pd.id) ?? { total: 0, construidos: 0 };
+    const snapshot = snapshotByPd.get(pd.id);
+    const total = snapshot?.total_naps ?? 0;
+    const construidos = snapshot?.construidos ?? 0;
     return {
       id: pd.id,
       code: pd.code,
       regionName: (pd.regions as unknown as { name: string } | null)?.name ?? "—",
-      total: totals.total,
-      construidos: totals.construidos,
-      pctOdn: pctOdn(totals.construidos, totals.total),
+      total,
+      construidos,
+      pctOdn: pctOdn(construidos, total),
     };
   });
 
