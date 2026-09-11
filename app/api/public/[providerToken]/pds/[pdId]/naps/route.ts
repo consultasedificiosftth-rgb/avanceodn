@@ -37,8 +37,7 @@ export async function GET(
     .select("*, nap_photos(*)")
     .eq("pd_id", pd.id)
     .eq("active", true)
-    .order("code", { ascending: true })
-    .headers({ "Cache-Control": "no-cache", Pragma: "no-cache" });
+    .order("code", { ascending: true });
 
   if (napsError) {
     return NextResponse.json({ error: napsError.message }, { status: 500 });
