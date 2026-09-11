@@ -7,7 +7,13 @@ import { pctOdn } from "@/lib/types";
 // Este GET usa createAdminClient() (sin cookies()/headers()), así que Next lo
 // trataría como estático y lo cachearía por combinación de params: el proveedor
 // vería el estado de construido/pruebas_opticas congelado en la primera carga.
+// fetchCache = "force-no-store" es necesario además de dynamic: fuerza que TODO
+// fetch hecho dentro del handler (incluido el que hace supabase-js internamente)
+// ignore el Data Cache de Next, incluso si esa librería pasara su propia opción
+// `cache` al fetch — dynamic solo no lo garantiza en ese caso.
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export async function GET(
   _request: NextRequest,
@@ -31,7 +37,8 @@ export async function GET(
     .select("*, nap_photos(*)")
     .eq("pd_id", pd.id)
     .eq("active", true)
-    .order("code", { ascending: true });
+    .order("code", { ascending: true })
+    .headers({ "Cache-Control": "no-cache", Pragma: "no-cache" });
 
   if (napsError) {
     return NextResponse.json({ error: napsError.message }, { status: 500 });
@@ -54,17 +61,20 @@ export async function GET(
   const construidos = napsWithUrls.filter((n) => n.construido).length;
   const pruebasOpticas = napsWithUrls.filter((n) => n.pruebas_opticas).length;
 
-  return NextResponse.json({
-    pd: {
-      id: pd.id,
-      code: pd.code,
+  return NextResponse.json(
+    {
+      pd: {
+        id: pd.id,
+        code: pd.code,
+      },
+      stats: {
+        total,
+        construidos,
+        pruebasOpticas,
+        pctOdn: pctOdn(construidos, total),
+      },
+      naps: napsWithUrls,
     },
-    stats: {
-      total,
-      construidos,
-      pruebasOpticas,
-      pctOdn: pctOdn(construidos, total),
-    },
-    naps: napsWithUrls,
-  });
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
